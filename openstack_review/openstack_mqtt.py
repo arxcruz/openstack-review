@@ -1,8 +1,13 @@
+import logging
 import paho.mqtt.client as mqtt
 import json
 import re
 
+from gi.repository import GLib
+
 from jenkins_info import JenkinsInfo
+
+LOG = logging.getLogger(__name__)
 
 
 class OpenstackMqtt():
@@ -13,8 +18,10 @@ class OpenstackMqtt():
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
 
+        self.client.connect('firehose.openstack.org')
+
     def on_connect(self, client, userdata, flags, rc):
-        print('Connected with result code ' + str(rc))
+        LOG.debug('Connected with result code ' + str(rc))
         self.add_subscribe('openstack/tripleo-quickstart')
         self.add_subscribe('openstack/tripleo-quickstart-extras')
         self.add_subscribe('openstack/nova')
@@ -27,7 +34,10 @@ class OpenstackMqtt():
         self.client.subscribe('gerrit/{}/merge-failed'.format(project))
 
     def on_message(self, client, userdata, msg):
-        print('New message: {}'.format(msg.topic)) 
+        GLib.idle_add(self._on_message, client, userdata, msg)
+
+    def _on_message(self, client, userdata, msg):
+        LOG.debug('New message received: {}'.format(msg.topic))
         payload = json.loads(str(msg.payload))
         topic = msg.topic[msg.topic.rfind('/')+1:]
         info = None
@@ -65,5 +75,4 @@ class OpenstackMqtt():
         return new_message
 
     def start(self):
-        self.client.connect('firehose.openstack.org')
-        self.client.loop_forever()
+        self.client.loop_start()

@@ -12,3 +12,6 @@ class JenkinsInfo(GObject.GObject):
     def __init__(self):
         GObject.GObject.__init__(self)
 
+    def __str__(self):
+        return 'Change-ID: {}, Subject: {}, Verified: {}'.format(self.change_id,
+                                                   self.subject, self.verified)

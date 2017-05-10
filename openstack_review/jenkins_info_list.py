@@ -32,23 +32,7 @@ class JenkinsInfoList(GObject.GObject):
     def add_jenkins_info(self, info):
         if type(info) is JenkinsInfo:
             if self.contains(info):
-                changed = False
-                old_info = self.jenkins_dict[info.change_id]
-                if old_info.url != info.url:
-                    old_info.url = info.url
-                    changed = True
-                if old_info.description != info.description:
-                    old_info.description = info.description
-                    changed = True
-                if old_info.subject != info.subject:
-                    old_info.subject = info.subject
-                    changed = True
-                if old_info.verified != info.verified:
-                    old_info.verified = info.verified
-                    changed = True
-
-                if changed:
-                    self.emit('jenkins-info-changed', old_info)
+                self.update_jenkins_info(info)
             else:
                 self.jenkins_dict[info.change_id] = info
                 self.emit('jenkins-info-added', info)

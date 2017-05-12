@@ -8,6 +8,7 @@ class JenkinsInfo(GObject.GObject):
                                 default=True)
     description = GObject.Property(type=str, flags=GObject.PARAM_READWRITE)
     subject = GObject.Property(type=str, flags=GObject.PARAM_READWRITE)
+    project = GObject.Property(type=str, flags=GObject.PARAM_READWRITE)
 
     def __init__(self):
         GObject.GObject.__init__(self)

@@ -3,6 +3,8 @@ import paho.mqtt.client as mqtt
 import json
 import re
 
+import gerrit
+
 from gi.repository import GLib
 
 from jenkins_info import JenkinsInfo
@@ -51,6 +53,8 @@ class OpenstackMqtt():
             info.description = self.parse_commit_message(
                     payload['change']['commitMessage'])
 
+        if not self.jenkins_list.contains(info):
+            info.verified = gerrit.get_verified_from_gerrit(info.change_id)
         if topic == 'change-merged':
             self.jenkins_list.del_jenkins_info(info)
         else:

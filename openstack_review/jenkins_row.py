@@ -10,17 +10,35 @@ LOG = logging.getLogger(__name__)
 
 class JenkinsRow(Gtk.ListBoxRow):
     def __init__(self, j_info):
+        css_class = '''
+            #subject {
+                font-weight: bold;
+            }
+
+        '''
         Gtk.ListBoxRow.__init__(self)
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # Red / Green image
         self.image = Gtk.Image.new_from_stock('gtk-no', Gtk.IconSize.BUTTON)
+
+        # Subject label
         self.subject = Gtk.Label()
+        self.subject.set_name('subject')
         self.subject.set_line_wrap(True)
         self.subject.set_xalign(0)
+        context = self.subject.get_style_context()
+        style_provider = Gtk.CssProvider()
+        style_provider.load_from_data(css_class)
+        context.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
+
+        # Description text view
         self.description = Gtk.TextView()
         self.textbuffer = self.description.get_buffer()
+
+        # Link button with url to open review
         self.url = Gtk.LinkButton()
         self.url.set_label('Review this change')
 
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
         hbox.pack_start(self.image, False, False, 6)
         hbox.pack_start(self.subject, False, False, 6)
@@ -46,6 +64,7 @@ class JenkinsRow(Gtk.ListBoxRow):
     def jenkis_info(self, value):
         LOG.debug('Setting jenkins_info: {}'.format(value))
         self._j_info = value
+        self._set_verified_image(self._j_info)
         self._j_info.bind_property('subject', self.subject, 'label',
                                    GObject.BindingFlags.DEFAULT |
                                    GObject.BindingFlags.SYNC_CREATE)
@@ -57,10 +76,13 @@ class JenkinsRow(Gtk.ListBoxRow):
                                    GObject.BindingFlags.SYNC_CREATE)
         self._j_info.connect('notify::verified', self.on_notify_verify)
 
-    def on_notify_verify(self, obj, gparamstring):
-        print 'Change status: {}'.format(obj.verified)
+    def _set_verified_image(self, obj):
         if obj.verified:
             self.image.set_from_stock('gtk-yes', Gtk.IconSize.BUTTON)
         else:
             self.image.set_from_stock('gtk-no', Gtk.IconSize.BUTTON)
+
+    def on_notify_verify(self, obj, gparamstring):
+        print 'Change status: {}'.format(obj.verified)
+        self._set_verified_image(obj)
         self.changed()

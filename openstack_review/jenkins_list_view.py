@@ -36,4 +36,9 @@ class JenkinsListBox(Gtk.ListBox):
         LOG.debug('Entering sort_func')
         LOG.debug('Row 1: {}'.format(row1.jenkins_info))
         LOG.debug('Row 2: {}'.format(row2.jenkis_info))
-        return row1.jenkins_info.verified > row2.jenkins_info.verified
+        if row1.jenkins_info.verified > row2.jenkis_info.verified:
+            return -1
+        elif row1.jenkis_info.verified < row2.jenkis_info.verified:
+            return 1
+        else:
+            return 0

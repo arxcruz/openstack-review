@@ -52,6 +52,7 @@ class OpenstackMqtt():
             info.subject = payload['change']['subject']
             info.description = self.parse_commit_message(
                     payload['change']['commitMessage'])
+            info.project = payload['change']['project']
 
         if not self.jenkins_list.contains(info):
             info.verified = gerrit.get_verified_from_gerrit(info.change_id)

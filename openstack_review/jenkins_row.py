@@ -30,6 +30,11 @@ class JenkinsRow(Gtk.ListBoxRow):
         style_provider.load_from_data(css_class)
         context.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
 
+        # Project label
+        self.project = Gtk.Label()
+        self.project.set_name('project')
+        self.project.set_xalign(0)
+
         # Description text view
         self.description = Gtk.TextView()
         self.textbuffer = self.description.get_buffer()
@@ -38,10 +43,15 @@ class JenkinsRow(Gtk.ListBoxRow):
         self.url = Gtk.LinkButton()
         self.url.set_label('Review this change')
 
+        # Boxes
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+
         hbox.pack_start(self.image, False, False, 6)
-        hbox.pack_start(self.subject, False, False, 6)
+        vbox.pack_start(self.subject, False, False, 6)
+        vbox.pack_start(self.project, False, False, 6)
+        hbox.pack_start(vbox, False, False, 6)
         box.pack_start(hbox, True, True, 0)
         expander = Gtk.Expander.new('Details')
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
@@ -74,6 +84,9 @@ class JenkinsRow(Gtk.ListBoxRow):
         self._j_info.bind_property('url', self.url, 'uri',
                                    GObject.BindingFlags.DEFAULT |
                                    GObject.BindingFlags.SYNC_CREATE)
+        self._j_info.bind_property('project', self.project, 'label',
+                                   GObject.BindingFlags.DEFAULT |
+                                   GObject.BindingFlags.SYNC_CREATE)
         self._j_info.connect('notify::verified', self.on_notify_verify)
 
     def _set_verified_image(self, obj):
@@ -83,6 +96,5 @@ class JenkinsRow(Gtk.ListBoxRow):
             self.image.set_from_stock('gtk-no', Gtk.IconSize.BUTTON)
 
     def on_notify_verify(self, obj, gparamstring):
-        print 'Change status: {}'.format(obj.verified)
         self._set_verified_image(obj)
         self.changed()

@@ -1,70 +1,37 @@
 from gi.repository import Gtk
 from gi.repository import GObject
 
+from gi_composites import GtkTemplate
+
 from jenkins_info import JenkinsInfo
 
 import logging
+import sys
+from os.path import join, dirname
+sys.path.insert(0, join(dirname(__file__), '..', '..'))
 
 LOG = logging.getLogger(__name__)
 
 
+@GtkTemplate('data/gtk/jenkins_row.ui')
 class JenkinsRow(Gtk.ListBoxRow):
+
+    __gtype_name__ = 'JenkinsRow'
+    subject = GtkTemplate.Child()
+    description = GtkTemplate.Child()
+    revealer = GtkTemplate.Child()
+    project = GtkTemplate.Child()
+    verified = GtkTemplate.Child()
+    url = GtkTemplate.Child()
+    reveal_description = GtkTemplate.Child()
+
     def __init__(self, j_info):
-        css_class = '''
-            #subject {
-                font-weight: bold;
-            }
+        super(Gtk.ListBoxRow, self).__init__()
+        self.init_template()
 
-        '''
-        Gtk.ListBoxRow.__init__(self)
-        # Red / Green image
-        self.image = Gtk.Image.new_from_stock('gtk-no', Gtk.IconSize.BUTTON)
-
-        # Subject label
-        self.subject = Gtk.Label()
-        self.subject.set_name('subject')
-        self.subject.set_line_wrap(True)
-        self.subject.set_xalign(0)
-        context = self.subject.get_style_context()
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css_class)
-        context.add_provider(style_provider, Gtk.STYLE_PROVIDER_PRIORITY_USER)
-
-        # Project label
-        self.project = Gtk.Label()
-        self.project.set_name('project')
-        self.project.set_xalign(0)
-
-        # Description text view
-        self.description = Gtk.TextView()
-        self.textbuffer = self.description.get_buffer()
-
-        # Link button with url to open review
-        self.url = Gtk.LinkButton()
         self.url.set_label('Review this change')
-
-        # Boxes
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-
-        hbox.pack_start(self.image, False, False, 6)
-        vbox.pack_start(self.subject, False, False, 6)
-        vbox.pack_start(self.project, False, False, 6)
-        hbox.pack_start(vbox, False, False, 6)
-        box.pack_start(hbox, True, True, 0)
-        expander = Gtk.Expander.new('Details')
-        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_size_request(-1, 100)
-        scrolled_window.add(self.description)
-        hbox.pack_start(scrolled_window, True, True, 6)
-        expander.add(hbox)
-        box.pack_start(expander, True, True, 6)
-        box.pack_start(self.url, True, True, 6)
-        self.add(box)
+        self.textbuffer = self.description.get_buffer()
         self.jenkins_info = j_info
-        LOG.debug('Row created')
 
     @GObject.Property(type=JenkinsInfo)
     def jenkins_info(self):
@@ -89,11 +56,20 @@ class JenkinsRow(Gtk.ListBoxRow):
                                    GObject.BindingFlags.SYNC_CREATE)
         self._j_info.connect('notify::verified', self.on_notify_verify)
 
+    @GtkTemplate.Callback
+    def on_reveal_description_toggled(self, widget):
+        toggled = self.reveal_description.get_active()
+        if toggled:
+            self.reveal_description.set_label('Hide details')
+        else:
+            self.reveal_description.set_label('Show details')
+        self.revealer.set_reveal_child(toggled)
+
     def _set_verified_image(self, obj):
         if obj.verified:
-            self.image.set_from_stock('gtk-yes', Gtk.IconSize.BUTTON)
+            self.verified.set_from_stock('gtk-yes', Gtk.IconSize.BUTTON)
         else:
-            self.image.set_from_stock('gtk-no', Gtk.IconSize.BUTTON)
+            self.verified.set_from_stock('gtk-no', Gtk.IconSize.BUTTON)
 
     def on_notify_verify(self, obj, gparamstring):
         self._set_verified_image(obj)
